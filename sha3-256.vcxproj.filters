@@ -18,6 +18,9 @@
     <ClCompile Include="sha3-256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="keccak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3.h">

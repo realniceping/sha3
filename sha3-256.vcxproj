@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="keccak.cpp" />
     <ClCompile Include="sha3-256.cpp" />
   </ItemGroup>
   <ItemGroup>
