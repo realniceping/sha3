@@ -1,0 +1,1 @@
+g++ main.cpp -L./libs/ -o main.exe

@@ -1,2 +1,1 @@
-g++ .\main.cpp .\sha3.cpp -o sha3.exe
-sha3.exe
+gcc .\main.c .\sha3.c -o sha3.exe
