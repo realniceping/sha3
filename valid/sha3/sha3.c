@@ -36,6 +36,77 @@ unsigned long long sha3_roundConsts[SHA3_NR] = {
     0x0000000080000001,
     0x8000000080008008};
 
+
+FILE * output_file;
+// char hex[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+char hex[16] = "0123456789abcdef";
+
+void printULLbin(unsigned long long a){
+    for (size_t i = 0; i < 64; i++)
+    {
+        printf("%d",( a >> (63 - i)) & 0x01);
+    }
+    printf("\n");
+}
+
+void printULLhex(unsigned long long a){
+        printf("0x%llx\n", a);   
+}
+
+void printCharArr(unsigned char *arr, int len, int separate){
+    for(int i = 0; i < len; i++){
+        if(separate) printf("%c%c%s", hex[arr[i] >> 4], hex[arr[i] & 0x0F], " ");
+        if(!separate) printf("%c%c%s", hex[arr[i] >> 4], hex[arr[i] & 0x0F], "");   
+    }
+    printf("\n");
+}
+
+
+void printKeccakStateArray(unsigned long long A[5][5]){
+    int bytes_n = 8 * 5 * 5; //always 200 
+    int bytes_row_n = 16;
+    int new_line = 0;
+    unsigned long long tmp;
+    fwrite("\n------------------------------\n", 1, 32, output_file);
+    for (size_t x = 0; x < 5; x++)
+    {
+        for (size_t y = 0; y < 5; y++)
+        {
+            for (size_t z = 1; z <= 8; z++)
+            {
+                tmp = (A[y][x] >> (64 - z * 8)) & 0xFF;
+                char * buff = malloc(2);
+                buff[0] = hex[tmp & 0x0F];
+                buff[1] = hex[tmp >> 4];
+                buff[2] = ' ';
+                fwrite(buff, 1, 3, output_file);
+                free(buff);
+            }
+
+            if(new_line == 1){
+                new_line = 0;
+                fwrite("\n", 1, 1, output_file);
+            }else{
+                new_line++;
+            }
+        }
+    }
+
+    for (size_t x = 0; x < 5; x++)
+    {
+        for (size_t y = 0; y < 5; y++)
+        {
+            
+            char * hexoutbuff = malloc(20);
+            sprintf(hexoutbuff, "0x%llx\n", A[y][x]);
+            fwrite(hexoutbuff, 1, 20, output_file);
+            free(hexoutbuff);
+        }
+    }
+ 
+    fwrite("\n------------------------------\n", 1, 32, output_file);
+}
+
 unsigned long long sha3_rotWord(unsigned long long w, unsigned int d)
 {
     d = d & 0x3f; // d mod 64
@@ -54,7 +125,8 @@ unsigned long long sha3_rotWord(unsigned long long w, unsigned int d)
 }
 
 void sha3_keccak_f(unsigned long long A[5][5])
-{
+{   
+
     for (int i = 0; i < SHA3_NR; i++)
     {
         // THETA ===============================
@@ -85,6 +157,8 @@ void sha3_keccak_f(unsigned long long A[5][5])
                 A[x][y] ^= D[x];
             }
         }
+        fwrite("\nAfter Theta\n", 1, 14, output_file);
+        printKeccakStateArray(A);
 
         // RHO, PI ===============================
         unsigned long long B[5][5];
@@ -98,6 +172,9 @@ void sha3_keccak_f(unsigned long long A[5][5])
             }
         }
 
+        fwrite("\nAfter Rho and Pi\n", 1, 20, output_file);
+        printKeccakStateArray(A);
+
         // CHI ===============================
         for (int x = 0; x < 5; x++)
         {
@@ -108,14 +185,21 @@ void sha3_keccak_f(unsigned long long A[5][5])
             }
         }
 
+        fwrite("\nAfter Chi\n", 1, 12, output_file);
+        printKeccakStateArray(A);
+
         // IOTA ===============================
         A[0][0] ^= sha3_roundConsts[i];
+
+        fwrite("\nAfter Iota\n", 1, 13, output_file);
+        printKeccakStateArray(A);
     }
 }
 
 int sha3_hash(unsigned char *in, int n, int mode, unsigned char **out)
 {
     // determine parameters
+    output_file = fopen("out.txt", "w");
     int r, ret_len;
 
     switch (mode)
@@ -144,6 +228,9 @@ int sha3_hash(unsigned char *in, int n, int mode, unsigned char **out)
     // state variables
     unsigned long long A[5][5];
     memset(A, 0, 5 * 5 * sizeof(unsigned long long));
+    fwrite("Absorb Begin\n", 1, 13, output_file);
+    printKeccakStateArray(A);
+
 
     int cursor = 0;           // cursor in the message
     int noBlocks = n / r + 1; // always pad
@@ -204,6 +291,8 @@ int sha3_hash(unsigned char *in, int n, int mode, unsigned char **out)
         // advance message cursor
         cursor += noBytesInBlock;
 
+        fwrite("Data to be absorbed\n", 1, 20, output_file);
+        printKeccakStateArray(A);
         // KECCAK-f
         sha3_keccak_f(A);
     }
@@ -245,6 +334,7 @@ int sha3_hash(unsigned char *in, int n, int mode, unsigned char **out)
         // KECCAK-f
         sha3_keccak_f(A);
     }
-
+    
+    fclose(output_file);
     return ret_len;
 }

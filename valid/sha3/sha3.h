@@ -10,16 +10,42 @@
 #define SHA3_256 256
 #define SHA3_512 512
 
+#define nist_1600_test_char 0b11000101
 
 extern unsigned int sha3_rotConst[5][5];
 extern unsigned long long sha3_roundConsts[SHA3_NR];
-
-unsigned long long leftRotateLL(unsigned long long w, unsigned int d);
 
 //необходимые функции нахождения минимального из двух чисел и максимального
 #define MAX(i1, i2) (i1 > i2 ? i1 : i2) 
 #define MIN(i1, i2) (i1 < i2 ? i1 : i2)
 
+void printULLbin(unsigned long long a);
+void printULLhex(unsigned long long a);
+
+
+
+/*
+* Выводит массив типа char на консоль
+* @param arr Массив, который необходимо вывести
+* @param len Длинна массива
+* @param separate Необходимо ли ставить пробел между битами, 1 или 0
+*/
+void printCharArr(unsigned char *arr, int len, int separate);
+
+
+/*
+* Выводит состояние функции keccak на консоль так, как это представлено в тестовом файле fips.
+* 16 байт в строке, с пробелами
+* @param A Массив состояния keccak 
+*/
+void printKeccakStateArray(unsigned long long A[5][5]);
+
+/*
+* Поворот осуществляется в сторону MSB
+* @param w 64 bits Word, слово, которое необохдимо "провернуть"
+* @param d  Значение на которое слово необходимо повернуть
+*/
+unsigned long long sha3_rotWord(unsigned long long w, unsigned int d);
 
 
 // kecchak signatures
